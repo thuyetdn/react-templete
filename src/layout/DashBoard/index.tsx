@@ -1,68 +1,65 @@
-import { Button } from "@mui/material";
-import React from "react";
-import { Trans, useTranslation } from "react-i18next";
-import { useDispatch, useSelector } from "react-redux";
-import { Actions } from "store";
-import { RootState } from "store/reducers";
-import useSWR from "swr";
+import { Box, LinearProgress } from "@mui/material";
+import { Drawer, Header } from "components";
+import React, { Suspense } from "react";
+import { styled } from "@mui/material/styles";
+import { DrawerHeader } from "components/DashBoard/Drawer";
+import { renderRoutes } from "react-router-config";
+import { DashBoardProps } from "lib/interfaces";
 
-const DashBoard = () => {
-  const mode = useSelector((state: RootState) => state.Web.mode);
-  const dispatch = useDispatch();
-  const { t, i18n } = useTranslation();
-  console.log(t);
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
+const drawerwidth = 240;
+
+const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
+  open?: boolean;
+}>(({ theme, open }) => ({
+  flexGrow: 1,
+  padding: theme.spacing(3),
+  transition: theme.transitions.create("margin", {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  marginLeft: 0,
+  ...(open && {
+    marginLeft: `${drawerwidth}px`,
+    transition: theme.transitions.create("margin", {
+      easing: theme.transitions.easing.easeOut,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
+}));
+
+/**
+ * This is dashboard layout for the web application
+ * - It contains :
+ * + header
+ * + drawer left
+ * + main content page
+ */
+const DashBoard: React.FC<DashBoardProps> = ({ route }) => {
+  const [open, setOpen] = React.useState(true);
+
+  const handleToggleDrawer = () => {
+    setOpen(!open);
   };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        {/* <img src={logo} className="App-logo" alt="logo" /> */}
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-      <Button
-        onClick={() => {
-          const newMode = mode === "dark" ? "light" : "dark";
-          document.cookie = `mode=${newMode}; expires=; path=/;`;
-          dispatch(
-            Actions.Web.update({
-              key: "mode",
-              value: newMode,
-            })
-          );
-        }}
-      >
-        Switch Mode
-      </Button>
-      <div className="App">
-        <div className="App-header">
-          <h2>{t("Welcome to React")}</h2>
-          <button onClick={() => changeLanguage("de")}>de</button>
-          <button onClick={() => changeLanguage("en")}>en</button>
-        </div>
-        <div className="App-intro">
-          <Trans>
-            To get started, edit <code>src/App.js</code> and save to reload.
-          </Trans>
-          <Trans i18nKey="welcome" />
-        </div>
-        <div style={{ marginTop: 40 }}>
-          Learn more:&nbsp;
-          <a href="https://react.i18next.com">https://react.i18next.js</a>
-        </div>
-      </div>
-    </div>
+    <Box>
+      <Header
+        open={open}
+        handleToggleDrawer={handleToggleDrawer}
+        drawerwidth={drawerwidth}
+      />
+      <Drawer
+        open={open}
+        handleToggleDrawer={handleToggleDrawer}
+        drawerwidth={drawerwidth}
+      />
+      <Main open={open}>
+        <DrawerHeader />
+        <Suspense fallback={<LinearProgress />}>
+          {renderRoutes(route?.routes)}
+        </Suspense>
+      </Main>
+    </Box>
   );
 };
 
